@@ -195,7 +195,7 @@ class Types:
             Types.register_type(Typ('Edm.Binary', 'binary\'\''))
             Types.register_type(Typ('Edm.Boolean', 'false', EdmBooleanTypTraits()))
             Types.register_type(Typ('Edm.Byte', '0'))
-            Types.register_type(Typ('Edm.DateTime', 'datetime\'2000-01-01T00:00\'', EdmDateTimeTypTraits()))
+            Types.register_type(Typ('Edm.DateTime', 'null', EdmDateTimeTypTraits()))
             Types.register_type(Typ('Edm.Decimal', '0.0M'))
             Types.register_type(Typ('Edm.Double', '0.0d', EdmFPNumTypTraits.edm_double()))
             Types.register_type(Typ('Edm.Single', '0.0f', EdmFPNumTypTraits.edm_single()))
@@ -385,6 +385,9 @@ class EdmDateTimeTypTraits(EdmPrefixedTypTraits):
            value.strftime('%Y-%m-%dT%H:%M:%S.%f')
         """
 
+        if value is None:
+            return 'null'
+
         if not isinstance(value, datetime.datetime):
             raise PyODataModelError(
                 'Cannot convert value of type {} to literal. Datetime format is required.'.format(type(value)))
@@ -393,6 +396,10 @@ class EdmDateTimeTypTraits(EdmPrefixedTypTraits):
         return super(EdmDateTimeTypTraits, self).to_literal(value.replace(tzinfo=None).isoformat())
 
     def to_json(self, value):
+
+        if value is None:
+            return 'null'
+
         if isinstance(value, str):
             return value
 
@@ -421,10 +428,8 @@ class EdmDateTimeTypTraits(EdmPrefixedTypTraits):
 
     def from_literal(self, value):
 
-        if value is None:
+        if value is None or value is 'null':
             return None
-
-        value = super(EdmDateTimeTypTraits, self).from_literal(value)
 
         try:
             value = datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%f')
